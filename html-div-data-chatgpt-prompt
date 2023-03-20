@@ -1,0 +1,92 @@
+#!/usr/bin/env python3
+
+## html-div-data-chatgpt-prompt
+#
+# For each HTML div data-chatgpt-prompt tag with an empty inner area, connect to
+# ChatGPT, use the prompt, and set the inner area to the response content.
+#
+# Syntax:
+#
+#     html-div-data-chatgpt-prompt
+#
+# Example input file `example.html`:
+#
+#     <html>
+#       <body>
+#         <div data-chatgpt-prompt="define poetry"></div>
+#       </body>
+#     </html>
+#
+# Example command:
+#
+#     cat example.html | 
+#     html-div-data-chatgpt-prompt
+#
+# Example output:
+#
+#     <html>
+#       <body>
+#         <div data-chatgpt-prompt="define poetry">Poetry is a form of literature...</div>
+#         </div>
+#       </body>
+#     </html>
+#
+# ## Tracking
+#
+#  * Command: html-div-data-chatgpt-prompt
+#  * Version: 1.0.0
+#  * Created: 2023-03-14T11:02:13Z
+#  * Updated: 2023-03-20T19:48:46Z
+#  * License: GPL-2.0 or GPL-3.0 or contact us for more
+#  * Website: https://github.com/sixarm/html-div-data-chatgpt-prompt
+#  * Contact: Joel Parker Henderson (joel@sixarm.com)
+##
+
+import os
+import re
+import requests
+import subprocess
+import sys
+
+# Load OpenAI.com API key
+key = os.environ['OPENAI_API_KEY']
+
+# Prepare regex
+r = re.compile("(<div data-chatgpt-prompt=\"(.*?)\">)(</div>)")
+
+# Read stdin text, typcally HTML or markdown
+s = sys.stdin.read()
+
+# Fetch ChatGPT prompt, and return its completion as JSON
+def prompt_to_completion(prompt):
+    sys.stderr.write(f"prompt_to_completion prompt: {prompt}\n")
+    response = requests.post(
+        "https://api.openai.com/v1/chat/completions",
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {key}",
+        },
+        json={
+            "model": "gpt-3.5-turbo",
+            "messages": [{
+                    "role": "user", 
+                    "content": prompt,
+            }] 
+        }
+    )
+    response.raise_for_status()
+    return response
+
+def match_to_completion(match):
+    sys.stderr.write(f"match_to_completion")
+    tag_open, prompt, tag_shut = match.groups()
+    sys.stderr.write(f" prompt: {prompt}")
+    response = prompt_to_completion(prompt)
+    content = response.json()['choices'][0]['message']['content'].strip()
+    result = f"{tag_open}{content}{tag_shut}"
+    sys.stderr.write(f" result: {result}\n\n")
+    return result
+
+cooked = r.sub(match_to_completion, s)
+print(cooked)
