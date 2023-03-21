@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
-## html-div-data-chatgpt-prompt
+##
+# html-div-data-chatgpt-prompt
 #
-# For each HTML div data-chatgpt-prompt tag with an empty inner area, connect to
-# ChatGPT, use the prompt, and set the inner area to the response content.
+# For each HTML div tag with attribute key `data-chatgpt-prompt` and blank inner
+# HTML, replace the inner HTML with completion message content from ChatGPT API.
 #
 # Syntax:
 #
