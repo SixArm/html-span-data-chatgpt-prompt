@@ -8,7 +8,21 @@
 #
 # Syntax:
 #
-#     html-div-data-chatgpt-prompt
+#     html-div-data-chatgpt-prompt [options]
+#
+#
+# ## Options
+#
+#  * -v --verbose : print verbose messages
+#
+#  * -i --input <FILE> : input file path
+#
+#  * -o --output <FILE> : output file path
+#
+#  * -c --change <FILE> : change file path in place
+#
+#
+# ## Examples
 #
 # Example input file `example.html`:
 #
@@ -20,7 +34,7 @@
 #
 # Example command:
 #
-#     cat example.html | 
+#     cat example.html |
 #     html-div-data-chatgpt-prompt
 #
 # Example output:
@@ -32,22 +46,46 @@
 #       </body>
 #     </html>
 #
+#
+# Read an input file and write an output file:
+#
+#     html-div-data-chatgpt-prompt --input example.html --output result.html
+#
+# Change a file in place:
+#
+#     html-div-data-chatgpt-prompt --change example.html
+#
+#
 # ## Tracking
 #
 #  * Command: html-div-data-chatgpt-prompt
-#  * Version: 1.0.0
+#  * Version: 1.1.0
 #  * Created: 2023-03-14T11:02:13Z
-#  * Updated: 2023-03-20T19:48:46Z
+#  * Updated: 2023-03-23T21:04:24Z
 #  * License: GPL-2.0 or GPL-3.0 or contact us for more
 #  * Website: https://github.com/sixarm/html-div-data-chatgpt-prompt
 #  * Contact: Joel Parker Henderson (joel@sixarm.com)
 ##
 
+import argparse
 import os
 import re
 import requests
 import subprocess
 import sys
+
+from pathlib import Path
+
+parser = argparse.ArgumentParser(
+    prog="html-div-data-chatgpt-prompt",
+    description="For each HTML div tag with attribute key `data-chatgpt-prompt` and blank inner HTML, replace the inner HTML with completion message content from ChatGPT API.",
+    epilog="https://github.com/sixarm/html-div-data-chatgpt-prompt"
+)
+parser.add_argument('-v', '--verbose', action='count', default=0)
+parser.add_argument('-i', '--input', help='input file name')
+parser.add_argument('-o', '--output', help='output file name')
+parser.add_argument('-c', '--change', help='change file name in place')
+args = parser.parse_args()
 
 # Load OpenAI.com API key
 key = os.environ['OPENAI_API_KEY']
@@ -55,12 +93,13 @@ key = os.environ['OPENAI_API_KEY']
 # Prepare regex
 r = re.compile("(<div data-chatgpt-prompt=\"(.*?)\">)(</div>)")
 
-# Read stdin text, typcally HTML or markdown
-s = sys.stdin.read()
+def verbose(message):
+    if args.verbose > 0:
+        sys.stderr.write(message)
 
 # Fetch ChatGPT prompt, and return its completion as JSON
 def prompt_to_completion(prompt):
-    sys.stderr.write(f"prompt_to_completion prompt: {prompt}\n")
+    verbose(f"prompt_to_completion prompt: {prompt}\n")
     response = requests.post(
         "https://api.openai.com/v1/chat/completions",
         headers={
@@ -71,23 +110,46 @@ def prompt_to_completion(prompt):
         json={
             "model": "gpt-3.5-turbo",
             "messages": [{
-                    "role": "user", 
+                    "role": "user",
                     "content": prompt,
-            }] 
+            }]
         }
     )
     response.raise_for_status()
+    verbose(f"prompt_to_completion response: {response}\n")
     return response
 
 def match_to_completion(match):
-    sys.stderr.write(f"match_to_completion")
     tag_open, prompt, tag_shut = match.groups()
-    sys.stderr.write(f" prompt: {prompt}")
     response = prompt_to_completion(prompt)
     content = response.json()['choices'][0]['message']['content'].strip()
     result = f"{tag_open}{content}{tag_shut}"
-    sys.stderr.write(f" result: {result}\n\n")
     return result
 
-cooked = r.sub(match_to_completion, s)
-print(cooked)
+## Main
+
+if args.change is not None:
+    verbose(f"Change file: {args.change}\n")
+    args.input = args.change
+    args.output = args.change
+
+if args.input is None:
+    verbose("Read input via stdin\n")
+    input = sys.stdin.read()
+else:
+    verbose(f"Read input via file: {args.input}\n")
+    input = Path(args.input).read_text()
+
+output, n = r.subn(match_to_completion, input)
+print(f"Number of substitutions: {n}")
+
+if args.output is None:
+    verbose("Write output via stdout\n")
+    print(output)
+else:
+    if n == 0 and args.input == args.output:
+        verbose(f"Skip output via file: {args.output}\n")
+        pass
+    else:
+        verbose(f"Write output via file: {args.output}\n")
+        Path(args.output).write_text(output)
