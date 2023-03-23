@@ -1,12 +1,12 @@
-# html-div-data-chatgpt-prompt
+# html-span-data-chatgpt-prompt
 
-For each HTML div tag with attribute key `data-chatgpt-prompt` and blank inner
+For each HTML span tag with attribute key `data-chatgpt-prompt` and blank inner
 HTML, replace the inner HTML with completion message content from ChatGPT API.
 
 Syntax:
 
 ```sh
-html-div-data-chatgpt-prompt [options]
+html-span-data-chatgpt-prompt [options]
 ```
 
 
@@ -28,7 +28,7 @@ Example input file `example.html`:
 ```html
 <html>
   <body>
-    <div data-chatgpt-prompt="define poetry"></div>
+    <span data-chatgpt-prompt="define poetry"></span>
   </body>
 </html>
 ```
@@ -37,7 +37,7 @@ Example command:
 
 ```sh
 cat example.html |
-html-div-data-chatgpt-prompt
+html-span-data-chatgpt-prompt
 ```
 
 Example output:
@@ -45,7 +45,7 @@ Example output:
 ```html
 <html>
   <body>
-    <div data-chatgpt-prompt="define poetry">Poetry is a form of literature...</div>
+    <span data-chatgpt-prompt="define poetry">Poetry is a form of literature...</span>
   </body>
 </html>
 ```
@@ -53,22 +53,22 @@ Example output:
 Read an input file and write an output file:
 
 ```sh
-html-div-data-chatgpt-prompt --input example.html --output result.html
+html-span-data-chatgpt-prompt --input example.html --output result.html
 ```
 
 Change a file in place:
 
 ```sh
-html-div-data-chatgpt-prompt --change example.html
+html-span-data-chatgpt-prompt --change example.html
 ```
 
 
 ## Tracking
 
- * Command: html-div-data-chatgpt-prompt
- * Version: 1.1.0
+ * Command: html-span-data-chatgpt-prompt
+ * Version: 2.0.0
  * Created: 2023-03-14T11:02:13Z
  * Updated: 2023-03-23T21:04:24Z
  * License: GPL-2.0 or GPL-3.0 or contact us for more
- * Website: https://github.com/sixarm/html-div-data-chatgpt-prompt
+ * Website: https://github.com/sixarm/html-span-data-chatgpt-prompt
  * Contact: Joel Parker Henderson (joel@sixarm.com)
